@@ -1,16 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Col,
-  Form,
-  Button,
-  Card,
-  Row
-} from 'react-bootstrap';
-
+import React, { useState } from 'react';
+import { Container, Card, Button, Row, Col } from 'react-bootstrap';
+import { useQuery, useMutation } from '@apollo/client';
+import { GET_ME, REMOVE_BOOK } from '../queries';
+import { removeBookId } from '../utils/localStorage';
 import Auth from '../utils/auth';
-import { useMutation } from '@apollo/client';
-import { SAVE_BOOK } from '../utils/mutations';
+
 
 
 const SearchBooks = () => {
@@ -28,11 +22,11 @@ const SearchBooks = () => {
   useEffect(() => {
     setSavedBookIds(JSON.parse(localStorage.getItem('saved_books')) || [] );
   }, []);
+ 
   useEffect(() => {
     localStorage.setItem('saved_books', JSON.stringify(savedBookIds));
   }, [savedBookIds]);  
-  });
-
+  
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event) => {
     event.preventDefault();
