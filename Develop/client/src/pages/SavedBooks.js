@@ -7,14 +7,21 @@ import {
   Col
 } from 'react-bootstrap';
 import { useQuery, useMutation } from '@apollo/client';
-import { GET_ME, REMOVE_BOOK } from '../utils/queries'; 
+import { GET_ME, REMOVE_BOOK } from '../queries'; 
 import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
 
 const SavedBooks = () => {
   const { loading, error, data } = useQuery(GET_ME);
-
   const [removeBook] = useMutation(REMOVE_BOOK);
+
+  const [userData, setUserData] = useState({});
+
+  useEffect(() => {
+    if (data) {
+      setUserData(data.me);
+    }
+  }, [data]);
 
   if (loading) {
     return <h2>LOADING...</h2>;
@@ -24,8 +31,6 @@ const SavedBooks = () => {
     console.error(error);
     return <h2>Something went wrong!</h2>;
   }
-
-  const userData = data.me;
 
   const handleDeleteBook = async (bookId) => {
     const token = Auth.loggedIn() ? Auth.getToken() : null;
