@@ -1,33 +1,32 @@
-import React, { useState } from 'react';
-import { Container, Card, Button, Row, Col } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Card, Button, Row, Col, Form } from 'react-bootstrap';
 import { useQuery, useMutation } from '@apollo/client';
-import { GET_ME, REMOVE_BOOK } from '../queries';
+import { GET_ME, SAVE_BOOK } from '../queries';
 import { removeBookId } from '../utils/localStorage';
 import Auth from '../utils/auth';
 
-
-
 const SearchBooks = () => {
-  // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState([]);
-  // create state for holding our search field data
   const [searchInput, setSearchInput] = useState('');
-
-  // create state to hold saved bookId values
   const [savedBookIds, setSavedBookIds] = useState([]);
   const [saveBook] = useMutation(SAVE_BOOK);
 
-  // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
-  // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
   useEffect(() => {
-    setSavedBookIds(JSON.parse(localStorage.getItem('saved_books')) || [] );
+    setSavedBookIds(JSON.parse(localStorage.getItem('saved_books')) || []);
   }, []);
- 
+
   useEffect(() => {
     localStorage.setItem('saved_books', JSON.stringify(savedBookIds));
-  }, [savedBookIds]);  
-  
-  // create method to search for books and set state on form submit
+  }, [savedBookIds]);
+
+  const searchGoogleBooks = async (query) => {
+    const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+      throw new Error('Something went wrong!');
+    }
+    return response.json();
+  };
+
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
@@ -39,7 +38,7 @@ const SearchBooks = () => {
       const response = await searchGoogleBooks(searchInput);
 
       if (!response.ok) {
-        throw new Error('something went wrong!');
+        throw new Error('Something went wrong!');
       }
 
       const { items } = await response.json();
@@ -59,12 +58,8 @@ const SearchBooks = () => {
     }
   };
 
-  // create function to handle saving a book to our database
   const handleSaveBook = async (bookId) => {
-    // find the book in `searchedBooks` state by the matching id
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
-
-    // get token
     const token = Auth.loggedIn() ? Auth.getToken() : null;
 
     if (!token) {
